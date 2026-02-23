@@ -96,6 +96,7 @@ async function initData() {
         loadAssignments(savedSemester);
         renderBookmarks(savedSemester); // Tampilkan bookmark tersimpan sesuai semester
         loadCourses(savedSemester);
+        checkDeadlines(); // Cek notifikasi setelah data siap
 
     } catch (error) {
         console.error("Gagal memuat data:", error);
@@ -161,26 +162,6 @@ function loadAssignments(semesterFilter) {
     // --- Filter Tugas Aktif (Deadline belum lewat) ---
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set ke awal hari untuk perbandingan tanggal
-
-    const parseDateStr = (d) => {
-        if (!d || typeof d !== 'string') return null;
-        const cleanD = d.trim().replace(/\//g, '-');
-        const parts = cleanD.split('-');
-        if (parts.length !== 3) return null;
-        
-        let [p1, p2, p3] = parts.map(n => parseInt(n, 10));
-        if (isNaN(p1) || isNaN(p2) || isNaN(p3)) return null;
-        
-        // Cek format YYYY-MM-DD (p1 > 31 asumsi tahun)
-        if (p1 > 31) {
-            return new Date(p1, p2 - 1, p3);
-        }
-        
-        // Asumsi DD-MM-YYYY
-        let year = p3;
-        if (year < 100) year += 2000;
-        return new Date(year, p2 - 1, p1);
-    };
 
     const formatDate = (d) => {
         const dateObj = parseDateStr(d);
@@ -324,11 +305,10 @@ function openAssignmentModal(encodedData) {
                     ` : ''}
                     
                     <div style="margin-top: 0.5rem; text-align: right;">
-                        <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0,20)}...', 'Deadline: ${t.deadline}', null, event)" class="list-bookmark-btn" title="Simpan Tugas">
+                        <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0,20)}...', 'Deadline: ${t.deadline}', null, event)" class="list-bookmark-btn" title="Simpan Tugas" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                             <i class="ph ${isBookmarked(generateId(t)) ? 'ph-star-fill' : 'ph-star'}" 
-                               style="color: ${isBookmarked(generateId(t)) ? 'var(--accent-color)' : 'var(--text-secondary)'}">
-                               Simpan Tugas
-                            </i>
+                               style="color: ${isBookmarked(generateId(t)) ? 'var(--accent-color)' : 'var(--text-secondary)'}; font-size: 1.2rem;"></i>
+                            <span style="font-size: 0.9rem; color: var(--text-secondary);">Simpan Tugas</span>
                         </button>
                     </div>
                 </div>
@@ -399,6 +379,32 @@ function loadDashboard(semesterFilter) {
 
 // 5. Modal & Search Logic
 function setupEventListeners() {
+    // Sidebar Toggle (PC & Mobile)
+    const menuToggle = document.getElementById('menu-toggle');
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('sidebar-hidden');
+            // Simpan status ke localStorage
+            const isHidden = document.documentElement.classList.contains('sidebar-hidden');
+            localStorage.setItem('sidebarState', isHidden ? 'hidden' : 'visible');
+        });
+    }
+    
+    // Notification Toggle
+    const notifBtn = document.getElementById('notif-toggle');
+    if (notifBtn) {
+        notifBtn.addEventListener('click', () => {
+            if (!("Notification" in window)) {
+                alert("Browser ini tidak mendukung notifikasi.");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") checkDeadlines(true);
+            });
+        });
+    }
+
     // Filter Semester
     document.getElementById('semester-filter').addEventListener('change', (e) => {
         const selectedSemester = e.target.value;
@@ -557,7 +563,7 @@ function renderModalContent(type) {
 
             // 1. Buat link download (GitHub Raw)
             // Gunakan link dari CSV jika ada, jika tidak, buat path default ke folder /tugas/
-            const downloadLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/tugas/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
+            const downloadLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/materi/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
 
             // 2. Buat link preview
             let previewLink = downloadLink; // Defaultnya sama dengan link download (untuk gambar, dll)
@@ -613,7 +619,7 @@ function renderModalContent(type) {
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem;">
                 ${photos.map(m => {
                     const dateDisplay = new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-                    const fileLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/tugas/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
+                    const fileLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/materi/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
                     const itemId = generateId(m);
                     const bookmarked = isBookmarked(itemId);
                     
@@ -646,12 +652,17 @@ function toggleBookmark(id, type, title, subtitle, link, event) {
         // Update icon visual secara langsung agar responsif
         const btn = event.currentTarget;
         const icon = btn.querySelector('i');
-        if (icon.classList.contains('ph-star-fill')) {
-            icon.classList.replace('ph-star-fill', 'ph-star');
-            icon.style.color = 'var(--text-secondary)';
-        } else {
-            icon.classList.replace('ph-star', 'ph-star-fill');
-            icon.style.color = 'var(--accent-color)';
+        
+        if (icon) {
+            if (icon.classList.contains('ph-star-fill')) {
+                icon.classList.remove('ph-star-fill');
+                icon.classList.add('ph-star');
+                icon.style.color = 'var(--text-secondary)';
+            } else {
+                icon.classList.remove('ph-star');
+                icon.classList.add('ph-star-fill');
+                icon.style.color = 'var(--accent-color)';
+            }
         }
     }
     
@@ -663,7 +674,9 @@ function toggleBookmark(id, type, title, subtitle, link, event) {
     }
     
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-    renderBookmarks();
+    // Ambil semester yang sedang aktif dan re-render bookmark list
+    const selectedSemester = document.getElementById('semester-filter').value;
+    renderBookmarks(selectedSemester);
 }
 
 function renderBookmarks(semesterFilter) {
@@ -751,4 +764,52 @@ function formatBytes(bytes, decimals = 0) {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+// 9. Notification Logic
+function checkDeadlines(force = false) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const limit = new Date(today);
+    limit.setDate(today.getDate() + 3); // Cek deadline 3 hari ke depan
+
+    // Filter tugas yang deadline-nya valid, belum lewat (atau hari ini), dan <= H+3
+    const upcoming = assignmentsData.filter(t => {
+        const d = parseDateStr(t.deadline);
+        return d && d >= today && d <= limit;
+    });
+
+    if (upcoming.length > 0) {
+        // Hanya kirim notifikasi jika dipaksa (klik tombol) atau belum pernah dikirim hari ini (opsional, saat ini kirim tiap load)
+        new Notification("Pengingat Tugas Kuliah", {
+            body: `Ada ${upcoming.length} tugas yang deadline-nya sebentar lagi! Cek sekarang.`,
+            icon: 'https://cdn-icons-png.flaticon.com/512/2991/2991112.png', // Ikon lonceng
+            tag: 'deadline-reminder' // Agar tidak spam notifikasi yang sama
+        });
+    } else if (force) {
+        alert("Tidak ada tugas yang deadline-nya dekat (3 hari ke depan).");
+    }
+}
+
+// Helper Date Parser (Global)
+function parseDateStr(d) {
+    if (!d || typeof d !== 'string') return null;
+    const cleanD = d.trim().replace(/\//g, '-');
+    const parts = cleanD.split('-');
+    if (parts.length !== 3) return null;
+    
+    let [p1, p2, p3] = parts.map(n => parseInt(n, 10));
+    if (isNaN(p1) || isNaN(p2) || isNaN(p3)) return null;
+    
+    // Cek format YYYY-MM-DD (p1 > 31 asumsi tahun)
+    if (p1 > 31) {
+        return new Date(p1, p2 - 1, p3);
+    }
+    
+    // Asumsi DD-MM-YYYY
+    let year = p3;
+    if (year < 100) year += 2000;
+    return new Date(year, p2 - 1, p1);
 }

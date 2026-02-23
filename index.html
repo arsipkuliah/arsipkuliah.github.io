@@ -18,20 +18,33 @@
             }
         }
     </style>
+    <script>
+        if (localStorage.getItem('sidebarState') === 'hidden') {
+            document.documentElement.classList.add('sidebar-hidden');
+        }
+    </script>
 </head>
 <body>
 
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container nav-container">
-            <a href="#" class="logo">
-                <i class="ph ph-books"></i> Arsip<span class="accent">Kuliah</span>
-            </a>
+            <div class="nav-left">
+                <button id="menu-toggle" class="icon-btn" aria-label="Menu">
+                    <i class="ph ph-list"></i>
+                </button>
+                <a href="#" class="logo">
+                    Arsip<span class="accent">Kuliah</span>
+                </a>
+            </div>
             <div class="nav-controls">
                 <div class="search-bar">
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" id="global-search" placeholder="Cari materi, dosen, atau tugas...">
                 </div>
+                <button id="notif-toggle" class="icon-btn" aria-label="Notifikasi">
+                    <i class="ph ph-bell"></i>
+                </button>
                 <button id="theme-toggle" class="icon-btn" aria-label="Toggle Dark Mode">
                     <i class="ph ph-moon"></i>
                 </button>
