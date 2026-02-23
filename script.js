@@ -91,8 +91,10 @@ async function initData() {
         }
         if (semesterSelect) {
             semesterSelect.value = savedSemester;
+
             loadCourses(savedSemester);
         }
+
 
     } catch (error) {
         console.error("Gagal memuat data:", error);
