@@ -80,21 +80,22 @@ async function initData() {
         renderBookmarks(); // Tampilkan bookmark tersimpan
         
         // Load semester filter from URL hash, fallback to localStorage, then default to '1'
-        let savedSemester = '1';
+        let savedSemester;
         if (window.location.hash) {
            const hash = window.location.hash.substring(1); // Remove '#'
            if (hash.startsWith('semester')) {
                savedSemester = hash.replace('semester', '');
            }
-        } else {
+        }
+        if (!savedSemester) {
             savedSemester = localStorage.getItem('semester') || '1';
         }
+
+        const semesterSelect = document.getElementById('semester-filter');
         if (semesterSelect) {
             semesterSelect.value = savedSemester;
-
-            loadCourses(savedSemester);
         }
-
+        loadCourses(savedSemester);
 
     } catch (error) {
         console.error("Gagal memuat data:", error);
