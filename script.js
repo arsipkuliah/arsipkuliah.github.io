@@ -398,7 +398,7 @@ function setupEventListeners() {
                 const permission = await OneSignal.getNotificationPermission();
                 const isSubscribed = OneSignal.User.PushSubscription.optedIn;
 
-                let statusMessage = `Status Langganan: ${isSubscribed ? '✅ Terdaftar' : '❌ Belum Terdaftar'}\n`;
+                let statusMessage = `Status Langganan: ${isSubscribed ? 'Terdaftar' : 'Belum Terdaftar'}\n`;
                 statusMessage += `Izin Browser: ${permission.toUpperCase()}`;
 
                 if (isSubscribed) {
