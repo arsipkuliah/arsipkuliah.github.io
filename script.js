@@ -24,6 +24,14 @@ if (bookmarks.length > 0 && typeof bookmarks[0] === 'string') {
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
 }
 
+// --- ONESIGNAL INIT ---
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(function(OneSignal) {
+    OneSignal.init({
+        appId: "PASTE_APP_ID_ONESIGNAL_DISINI", // GANTI DENGAN APP ID DARI ONESIGNAL
+    });
+});
+
 // --- LOGIC UTAMA ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -96,7 +104,6 @@ async function initData() {
         loadAssignments(savedSemester);
         renderBookmarks(savedSemester); // Tampilkan bookmark tersimpan sesuai semester
         loadCourses(savedSemester);
-        checkDeadlines(); // Cek notifikasi setelah data siap
 
     } catch (error) {
         console.error("Gagal memuat data:", error);
@@ -395,12 +402,10 @@ function setupEventListeners() {
     const notifBtn = document.getElementById('notif-toggle');
     if (notifBtn) {
         notifBtn.addEventListener('click', () => {
-            if (!("Notification" in window)) {
-                alert("Browser ini tidak mendukung notifikasi.");
-                return;
-            }
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") checkDeadlines(true);
+            // Trigger OneSignal Subscription Prompt
+            window.OneSignalDeferred.push(async function(OneSignal) {
+                await OneSignal.User.PushSubscription.optIn();
+                alert("Silakan klik 'Allow' atau 'Izinkan' pada popup yang muncul untuk menerima notifikasi tugas.");
             });
         });
     }
@@ -764,53 +769,6 @@ function formatBytes(bytes, decimals = 0) {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-}
-
-// 9. Notification Logic
-function checkDeadlines(force = false) {
-    if (!("Notification" in window) || Notification.permission !== "granted") return;
-
-    const now = new Date();
-    
-    // Aturan 1: Notifikasi hanya muncul mulai jam 7 pagi
-    if (now.getHours() < 7 && !force) return;
-
-    const todayStr = now.toDateString(); // String tanggal hari ini untuk perbandingan
-
-    const upcoming = assignmentsData.filter(t => {
-        const d = parseDateStr(t.deadline);
-        if (!d) return false;
-        
-        // Cek apakah deadline sudah lewat
-        if (d < now) return false;
-        
-        const dlHour = d.getHours();
-        
-        // Aturan 2: 
-        // - Jika deadline PAGI (05:00 - 11:00), notifikasi muncul KEMARIN (H-1)
-        // - Jika deadline SIANG/MALAM/DEFAULT, notifikasi muncul HARI INI (H-0)
-        const isMorningDeadline = dlHour >= 5 && dlHour <= 11;
-        
-        const notifyDate = new Date(d);
-        notifyDate.setHours(0, 0, 0, 0); // Reset ke awal hari
-
-        if (isMorningDeadline) {
-            notifyDate.setDate(notifyDate.getDate() - 1); // Mundur 1 hari
-        }
-
-        // Cek apakah hari ini adalah hari jadwal notifikasi
-        return notifyDate.toDateString() === todayStr;
-    });
-
-    if (upcoming.length > 0) {
-        new Notification("Pengingat Tugas Kuliah", {
-            body: `Ada ${upcoming.length} tugas yang deadline-nya sebentar lagi! Cek sekarang.`,
-            icon: 'https://cdn-icons-png.flaticon.com/512/2991/2991112.png', // Ikon lonceng
-            tag: 'deadline-reminder' // Agar tidak spam notifikasi yang sama
-        });
-    } else if (force) {
-        alert("Tidak ada notifikasi tugas saat ini (Cek kembali nanti di atas jam 7 pagi).");
-    }
 }
 
 // Helper Date Parser (Global)
