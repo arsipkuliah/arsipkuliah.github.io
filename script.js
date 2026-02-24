@@ -24,14 +24,6 @@ if (bookmarks.length > 0 && typeof bookmarks[0] === 'string') {
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
 }
 
-// --- ONESIGNAL INIT ---
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.init({
-        appId: "PASTE_APP_ID_ONESIGNAL_DISINI", // GANTI DENGAN APP ID DARI ONESIGNAL
-    });
-});
-
 // --- LOGIC UTAMA ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -402,10 +394,13 @@ function setupEventListeners() {
     const notifBtn = document.getElementById('notif-toggle');
     if (notifBtn) {
         notifBtn.addEventListener('click', () => {
-            // Trigger OneSignal Subscription Prompt
             window.OneSignalDeferred.push(async function(OneSignal) {
-                await OneSignal.User.PushSubscription.optIn();
-                alert("Silakan klik 'Allow' atau 'Izinkan' pada popup yang muncul untuk menerima notifikasi tugas.");
+                if (OneSignal.User.PushSubscription.optedIn) {
+                    alert("✅ Status: SUDAH TERDAFTAR.\nAnda akan menerima notifikasi jika ada tugas.");
+                } else {
+                    await OneSignal.User.PushSubscription.optIn();
+                    alert("Silakan klik 'Allow' atau 'Izinkan' pada popup browser untuk mengaktifkan notifikasi.");
+                }
             });
         });
     }

@@ -11,6 +11,14 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- OneSignal SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "8d435ddc-5a2b-4a91-83c4-3c10d0ed5fc6",
+        });
+      });
+    </script>
     <link rel="stylesheet" href="style.css">
     <style>
         /* Membuat tampilan lebih lebar (full width) di layar Laptop/PC */
