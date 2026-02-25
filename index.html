@@ -162,10 +162,13 @@
         <div class="modal-content" style="height: 90vh; max-width: 90vw;">
             <div class="modal-header">
                 <h2 id="preview-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Preview</h2>
-                <button class="close-modal" id="close-preview-modal">&times;</button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button id="fullscreen-btn" class="close-modal" style="font-size: 1.5rem;" title="Fullscreen"><i class="ph ph-corners-out"></i></button>
+                    <button class="close-modal" id="close-preview-modal">&times;</button>
+                </div>
             </div>
             <div class="modal-body" style="padding: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
-                <iframe id="preview-frame" style="width: 100%; height: 100%; border: none;" src=""></iframe>
+                <iframe id="preview-frame" style="width: 100%; height: 100%; border: none;" src="" allowfullscreen></iframe>
             </div>
         </div>
     </div>

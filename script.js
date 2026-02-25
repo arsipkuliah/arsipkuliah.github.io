@@ -476,6 +476,38 @@ function setupEventListeners() {
         });
     }
 
+    // Fullscreen Toggle Logic
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const previewModalContent = document.querySelector('#preview-modal .modal-content');
+    const previewFrame = document.getElementById('preview-frame');
+
+    if (fullscreenBtn && previewModalContent && previewFrame) {
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                // Request fullscreen pada iframe langsung agar header tidak terlihat
+                previewFrame.requestFullscreen().catch(err => {
+                    console.error(`Error enabling fullscreen: ${err.message}`);
+                    previewModalContent.requestFullscreen(); // Fallback jika iframe gagal
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            const icon = fullscreenBtn.querySelector('i');
+            if (document.fullscreenElement) {
+                icon.classList.replace('ph-corners-out', 'ph-corners-in');
+                if (document.fullscreenElement === previewModalContent) {
+                    previewModalContent.style.borderRadius = '0';
+                }
+            } else {
+                icon.classList.replace('ph-corners-in', 'ph-corners-out');
+                previewModalContent.style.borderRadius = '';
+            }
+        });
+    }
+
     // Tab Switching Logic
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
