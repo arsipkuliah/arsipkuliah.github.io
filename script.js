@@ -744,9 +744,45 @@ function renderBookmarks(semesterFilter) {
     
     list.innerHTML = filteredBookmarks.map(b => {
         const isLink = b.link && b.link !== 'null';
+        
+        // Logic Preview untuk Bookmark
+        let href = isLink ? b.link : '#';
+        let onclick = '';
+        let target = isLink ? 'target="_blank"' : '';
+
+        if (isLink && b.type === 'materi') {
+            let previewLink = b.link;
+            let canPreview = false;
+
+            // 1. Google Drive
+            if (b.link.includes('drive.google.com') || b.link.includes('docs.google.com')) {
+                previewLink = b.link.replace(/\/view.*/, '/preview');
+                canPreview = true;
+            } 
+            // 2. Dokumen Office/PDF (Cek ekstensi)
+            else {
+                const lowerUrl = b.link.toLowerCase();
+                const lowerTitle = b.title.toLowerCase();
+                const docExts = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
+                
+                if (docExts.some(ext => lowerUrl.endsWith(ext) || lowerTitle.endsWith(ext))) {
+                    previewLink = `https://docs.google.com/gview?url=${encodeURIComponent(b.link)}&embedded=true`;
+                    canPreview = true;
+                } else if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].some(ext => lowerUrl.endsWith(ext))) {
+                    canPreview = true;
+                }
+            }
+
+            if (canPreview) {
+                href = previewLink;
+                target = '';
+                onclick = `onclick="event.preventDefault(); showPreview('${previewLink}', '${b.title.replace(/'/g, "\\'")}')"`;
+            }
+        }
+
         return `
             <li class="bookmark-item" style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                <a href="${isLink ? b.link : '#'}" ${isLink ? 'target="_blank"' : ''} style="display: block; text-decoration: none; color: var(--text-primary);">
+                <a href="${href}" ${target} ${onclick} style="display: block; text-decoration: none; color: var(--text-primary);">
                     <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 2px;">${b.title}</div>
                     <div style="font-size: 0.75rem; color: var(--text-secondary); display:flex; align-items:center; gap:4px;">
                         <i class="ph ph-star-fill" style="color: var(--accent-color);"></i> ${b.subtitle || ''}
