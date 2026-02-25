@@ -487,6 +487,30 @@ function setupEventListeners() {
             renderModalContent(e.target.dataset.tab);
         });
     });
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Shortcut: ESC to close any active modal
+        if (e.key === 'Escape') {
+            const activeModal = document.querySelector('.modal.active');
+            if (activeModal) {
+                activeModal.classList.remove('active');
+                // Special handling for preview modal to stop video/content loading
+                if (activeModal.id === 'preview-modal') {
+                    document.getElementById('preview-frame').src = 'about:blank'; // Stop loading
+                }
+            }
+        }
+
+        // Shortcut: Ctrl + F or Ctrl + K to focus search
+        if (e.ctrlKey && (e.key === 'f' || e.key === 'k')) {
+            e.preventDefault(); // Prevent default browser search
+            const searchInput = document.getElementById('global-search');
+            searchInput.focus();
+            // Ensure mobile search bar becomes visible
+            searchInput.parentElement.classList.add('active');
+        }
+    });
 }
 
 
