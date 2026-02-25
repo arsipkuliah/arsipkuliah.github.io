@@ -68,55 +68,6 @@
         </div>
     </nav>
 
-    <!-- Upload Section (Hidden by default, shown via #upload) -->
-    <div id="upload-container" class="container" style="display: none; margin-top: 2rem; margin-bottom: 2rem;">
-        <div class="upload-card">
-            <div class="upload-header">
-                <h2><i class="ph ph-cloud-arrow-up"></i> Upload Materi Baru</h2>
-                <p>Bantu teman-teman dengan membagikan materi kuliah, catatan, atau tugas.</p>
-            </div>
-            
-            <form id="upload-form">
-                <div class="form-group">
-                    <label for="upload-semester">Semester</label>
-                    <select id="upload-semester" required>
-                        <option value="" disabled selected>Pilih Semester...</option>
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
-                        <option value="3">Semester 3</option>
-                        <option value="4">Semester 4</option>
-                        <option value="5">Semester 5</option>
-                        <option value="6">Semester 6</option>
-                        <option value="7">Semester 7</option>
-                        <option value="8">Semester 8</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="upload-course">Mata Kuliah</label>
-                    <select id="upload-course" required disabled>
-                        <option value="" disabled selected>Pilih Semester Terlebih Dahulu</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="upload-file">File Materi</label>
-                    <div class="file-drop-area" id="drop-area">
-                        <i class="ph ph-file-arrow-up"></i>
-                        <span class="file-msg">Klik atau seret file ke sini</span>
-                        <input type="file" id="upload-file" required>
-                    </div>
-                    <div id="file-preview" class="file-preview"></div>
-                </div>
-
-                <button type="submit" id="btn-submit" class="btn-upload">
-                    <span class="btn-text">Upload Sekarang</span>
-                    <i class="ph ph-paper-plane-right"></i>
-                </button>
-                <div id="upload-status" class="upload-status"></div>
-            </form>
-        </div>
-    </div>
 
     <main class="container main-layout">
         
