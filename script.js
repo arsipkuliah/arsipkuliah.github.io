@@ -101,6 +101,10 @@ async function initData() {
         console.error("Gagal memuat data:", error);
         // Fallback jika fetch gagal (opsional: tampilkan pesan error di UI)
         document.getElementById('course-grid').innerHTML = '<p style="color:red; text-align:center; grid-column:1/-1;">Gagal memuat data dari Google Sheets. Periksa koneksi atau URL.</p>';
+    } finally {
+        // Sembunyikan loading overlay setelah selesai (sukses/gagal)
+        const loader = document.getElementById('loading-overlay');
+        if (loader) loader.classList.add('hidden');
     }
 }
 
