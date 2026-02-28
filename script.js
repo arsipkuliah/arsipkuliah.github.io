@@ -37,10 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     initData(); // Mulai fetch data
 
-    // Periksa status tombol Upload saat load
-    if (localStorage.getItem('pj_token')) {
-        document.getElementById('menu-upload').style.display = 'block';
-    }
 });
 
 function initCookieConsent() {
@@ -80,83 +76,19 @@ function initCookieConsent() {
         localStorage.setItem('cookieConsent', 'true');
         localStorage.setItem('consent_personalization', personalizationToggle.checked);
 
-        // Cek input Token PJ
-        const tokenInput = document.getElementById('token-input');
-        const statusEl = document.getElementById('token-status');
-        let shouldDelayClose = false;
-
-        if (tokenInput) {
-            const inputVal = tokenInput.value.trim();
-            if (inputVal.length > 0 && inputVal.length < 3) {
-                if (statusEl) {
-                    statusEl.innerText = 'Nama Token terlalu pendek.';
-                    statusEl.style.color = 'var(--accent-color)';
-                }
-                return; // Stop & jangan tutup modal jika error panjang nama
-            } else if (inputVal.length >= 3) {
-                // Validasi input dengan daftar PIC dari Google Sheets
-                let isValidToken = false;
-                if (coursesData && coursesData.length > 0) {
-                    for (const course of coursesData) {
-                        if (course.pic) {
-                            const pics = course.pic.split(',').map(p => p.trim().toLowerCase());
-                            if (pics.includes(inputVal.toLowerCase())) {
-                                isValidToken = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Jika pengecekan gagal, beri status tertolak (opsi bypass: admin)
-                if (!isValidToken && inputVal.toLowerCase() !== 'admin') {
-                    if (statusEl) {
-                        statusEl.innerText = 'Token Akses ditolak atau tidak terdaftar.';
-                        statusEl.style.color = 'var(--accent-color)';
-                    }
-                    return; // Stop & jangan tutup modal
-                }
-
-                localStorage.setItem('pj_token', inputVal);
-                const menuUpload = document.getElementById('menu-upload');
-                if (menuUpload) menuUpload.style.display = 'block';
-                if (statusEl) {
-                    statusEl.innerText = 'Otorisasi berhasil disetujui.';
-                    statusEl.style.color = 'green';
-                }
-                shouldDelayClose = true;
-            } else if (inputVal === '') {
-                // Hapus token jika input dikosongkan
-                localStorage.removeItem('pj_token');
-                const menuUpload = document.getElementById('menu-upload');
-                if (menuUpload) menuUpload.style.display = 'none';
-            }
-        }
-
         const finalizeClose = () => {
             hideBanner();
             closeSettingsModal();
-            if (statusEl) statusEl.innerText = '';
 
             // Jika pengguna menonaktifkan personalisasi, hapus data yang ada
             if (!personalizationToggle.checked) {
                 localStorage.removeItem('theme');
                 localStorage.removeItem('bookmarks');
-                localStorage.removeItem('pj_token'); // Juga reset token jika tidak valid
                 window.location.reload();
-            } else {
-                // Jika dari hash #token, arahkan ke upload jika token valid
-                if (window.location.hash === '#token' && localStorage.getItem('pj_token')) {
-                    window.location.hash = 'upload';
-                }
             }
         };
 
-        if (shouldDelayClose) {
-            setTimeout(finalizeClose, 1000); // Beri jeda 1 detik untuk melihat centang hijau
-        } else {
-            finalizeClose();
-        }
+        finalizeClose();
     };
 
     // Event Listeners
@@ -791,13 +723,7 @@ function setupEventListeners() {
 
     document.getElementById('menu-upload')?.addEventListener('click', (e) => {
         e.preventDefault();
-        const savedToken = localStorage.getItem('pj_token');
-        if (savedToken) {
-            window.location.hash = 'upload';
-        } else {
-            alert('Akses Ditolak. Silakan masukkan Token PJ Anda terlebih dahulu.');
-            window.location.hash = 'token';
-        }
+        window.location.hash = 'upload';
         closeMenu();
     });
 
@@ -888,39 +814,20 @@ function checkHashRoute() {
         const uploadBtn = document.getElementById('menu-upload');
         if (uploadBtn) uploadBtn.classList.add('active');
 
-        const token = localStorage.getItem('pj_token');
-        if (token) {
-            const uploadModal = document.getElementById('upload-modal');
-            if (uploadModal) uploadModal.classList.add('active');
-            const iframe = document.getElementById('upload-modal-iframe');
-            if (iframe && iframe.src === 'about:blank' || iframe.src === window.location.href) {
-                iframe.src = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec?token=' + encodeURIComponent(token);
-            }
-        } else {
-            window.location.hash = 'token';
+        const uploadModal = document.getElementById('upload-modal');
+        if (uploadModal) uploadModal.classList.add('active');
+        const iframe = document.getElementById('upload-modal-iframe');
+        if (iframe && iframe.src === 'about:blank' || iframe.src === window.location.href) {
+            iframe.src = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec';
         }
     }
-    // 3. Rute Token & Pengaturan (Membuka popup yang sama, namun token scroll/isi tokenbox)
-    else if (hash === 'token' || hash === 'pengaturan') {
+    // 3. Rute Pengaturan
+    else if (hash === 'pengaturan') {
         const pengaturanBtn = document.getElementById('menu-pengaturan');
         if (pengaturanBtn) pengaturanBtn.classList.add('active');
 
         const settingsModal = document.getElementById('cookie-settings-modal');
         if (settingsModal) settingsModal.classList.add('active');
-
-        const input = document.getElementById('token-input');
-        const savedToken = localStorage.getItem('pj_token');
-        if (input) input.value = savedToken || '';
-
-        const statusEl = document.getElementById('token-status');
-        if (statusEl) {
-            if (savedToken) {
-                statusEl.innerText = 'Akses Upload Aktif.';
-                statusEl.style.color = 'green';
-            } else {
-                statusEl.innerText = '';
-            }
-        }
     }
     // 4. Rute Arsip Foto
     else if (hash.startsWith('arsipfoto')) {
