@@ -45,7 +45,6 @@ function initCookieConsent() {
     const manageBtn = document.getElementById('manage-cookies-btn');
     const settingsModal = document.getElementById('cookie-settings-modal');
     const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
-    const closeSettingsBtn = document.getElementById('close-cookie-settings-modal');
     const personalizationToggle = document.getElementById('consent-personalization-toggle');
 
     if (!banner) return;
@@ -95,7 +94,6 @@ function initCookieConsent() {
     acceptAllBtn.addEventListener('click', acceptAll);
     manageBtn.addEventListener('click', openSettingsModal);
     savePrefsBtn.addEventListener('click', savePreferences);
-    closeSettingsBtn.addEventListener('click', closeSettingsModal);
     setTimeout(() => {
         showBanner();
     }, 1500);
