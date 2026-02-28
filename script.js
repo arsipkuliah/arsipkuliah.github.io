@@ -196,6 +196,59 @@ async function initData() {
         // Sembunyikan loading overlay setelah selesai (sukses/gagal)
         const loader = document.getElementById('loading-overlay');
         if (loader) loader.classList.add('hidden');
+
+        // Mulai interval penyegaran data hanya sekali setelah load awal
+        if (!window.dataRefreshInterval) {
+            window.dataRefreshInterval = setInterval(refreshData, 60000); // 60000 ms = 1 menit
+        }
+    }
+}
+
+async function refreshData() {
+    console.log("Menyegarkan data dari Google Sheets...");
+
+    // Dapatkan semester yang sedang aktif dari dropdown
+    const semesterSelect = document.getElementById('semester-filter');
+    const currentSemester = semesterSelect ? semesterSelect.value : '1';
+
+    try {
+        // Tambahkan parameter unik untuk mencegah cache browser
+        const cacheBuster = '&t=' + new Date().getTime();
+
+        // Fetch semua data secara paralel
+        const [coursesRes, materialsRes, assignmentsRes, arsipFotoRes, mahasiswaRes] = await Promise.all([
+            fetch(COURSES_SHEET_URL + cacheBuster).then(r => r.ok ? r.text() : '').catch(() => ''),
+            fetch(MATERIALS_SHEET_URL + cacheBuster).then(r => r.ok ? r.text() : '').catch(() => ''),
+            fetch(ASSIGNMENTS_SHEET_URL + cacheBuster).then(r => r.ok ? r.text() : '').catch(() => ''),
+            fetch(ARSIP_FOTO_SHEET_URL + cacheBuster).then(r => r.ok ? r.text() : '').catch(() => ''),
+            fetch(MAHASISWA_SHEET_URL + cacheBuster).then(r => r.ok ? r.text() : '').catch(() => '')
+        ]);
+
+        // Update state data global
+        coursesData = parseCSV(coursesRes);
+        materialsData = parseCSV(materialsRes);
+        assignmentsData = parseCSV(assignmentsRes);
+        arsipFotoData = parseCSV(arsipFotoRes);
+        mahasiswaData = parseCSV(mahasiswaRes);
+
+        // Render ulang UI dengan data baru tanpa reload halaman
+        loadDashboard(currentSemester);
+        loadAssignments(currentSemester);
+        renderBookmarks(currentSemester);
+        loadCourses(currentSemester);
+
+        // Jika modal materi sedang terbuka, render ulang kontennya juga agar data tetap sinkron
+        if (activeCourse && document.getElementById('material-modal').classList.contains('active')) {
+            const activeTabBtn = document.querySelector('#material-modal .tab-btn.active');
+            if (activeTabBtn) {
+                renderModalContent(activeTabBtn.dataset.tab);
+            }
+        }
+
+        console.log("Data berhasil disegarkan.");
+
+    } catch (error) {
+        console.error("Gagal menyegarkan data:", error);
     }
 }
 
@@ -1853,6 +1906,9 @@ function initSpinUI() {
         // 2. Mulai Animasi Pengacakan
         isSpinning = true;
         btnSpin.style.cursor = 'not-allowed';
+
+        // Tampilkan area hasil
+        if (resultsWrapper) resultsWrapper.style.display = 'block';
 
         // --- MULAI REKAM VIDEO ---
         recordedChunks = [];
