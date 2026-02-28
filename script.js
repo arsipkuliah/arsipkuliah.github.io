@@ -892,7 +892,7 @@ function checkHashRoute() {
         if (token) {
             const uploadModal = document.getElementById('upload-modal');
             if (uploadModal) uploadModal.classList.add('active');
-            const iframe = document.getElementById('upload-iframe');
+            const iframe = document.getElementById('upload-modal-iframe');
             if (iframe && iframe.src === 'about:blank' || iframe.src === window.location.href) {
                 iframe.src = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec?token=' + encodeURIComponent(token);
             }
@@ -1713,12 +1713,14 @@ function parseDateStr(d) {
 // 9. RANDOM GROUP GENERATOR (SPIN KELOMPOK)
 // ==========================================
 let isSpinning = false;
+let forceStop = false; // Flag for click-to-stop
 
 function initSpinUI() {
     const btnSpin = document.getElementById('btn-spin');
     const displayBox = document.getElementById('spin-names-container');
     const resultsContainer = document.getElementById('spin-results');
     const groupInput = document.getElementById('spin-groups');
+    const spinDisplay = document.getElementById('spin-display');
     const textarea = document.getElementById('spin-names-textarea');
     const countDisplay = document.getElementById('spin-names-count');
     const fullscreenBtn = document.getElementById('btn-fullscreen-results');
@@ -1736,6 +1738,13 @@ function initSpinUI() {
     // Mencegah multiple binding jika fungsi dipanggil ulang oleh router
     if (btnSpin.dataset.bound) return;
     btnSpin.dataset.bound = "true";
+
+    // Add click-to-stop listener to the wheel display
+    if (spinDisplay) {
+        spinDisplay.addEventListener('click', () => {
+            if (isSpinning) forceStop = true;
+        });
+    }
 
     // 1. Inisialisasi Textarea dengan data dari Google Sheets (Mahasiswa)
     const validStudents = mahasiswaData;
@@ -1962,7 +1971,6 @@ function initSpinUI() {
         resultsContainer.innerHTML = ''; // Bersihkan hasil sebelumnya
 
         // Animasi memperbesar roda dan menyembunyikan panel lain
-        const spinDisplay = document.getElementById('spin-display');
         const leftPanel = document.getElementById('spin-left-panel');
         const groupInputContainer = document.getElementById('spin-group-input-container');
 
@@ -2037,6 +2045,16 @@ function initSpinUI() {
             if (skipToggle && skipToggle.checked) {
                 const winnerIndex = Math.floor(Math.random() * remainingNames.length);
                 const winnerName = remainingNames[winnerIndex];
+                
+                // Hitung rotasi agar menunjuk ke pemenang
+                const sliceAngle = (2 * Math.PI) / remainingNames.length;
+                const pointerAngle = (3 * Math.PI) / 2; // 270 derajat (Atas)
+                currentRotation = pointerAngle - ((winnerIndex + 0.10) * sliceAngle);
+                
+                // Gambar roda dengan posisi baru (sebelum nama dihapus)
+                drawWheel(remainingNames, currentRotation);
+
+                // Hapus nama dari daftar
                 remainingNames.splice(winnerIndex, 1);
 
                 if (roundRobinCounter > 0 && roundRobinCounter % numGroups === 0) {
@@ -2050,13 +2068,12 @@ function initSpinUI() {
                 const countEl = document.getElementById(`group-count-${activeGroup}`);
                 if (listEl) {
                     listEl.innerHTML += `<li>${winnerName}</li>`;
-                    listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    // listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
                 if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
 
                 roundRobinCounter++;
-                drawWheel(remainingNames, currentRotation);
-                setTimeout(spinSequentialRound, 100);
+                setTimeout(spinSequentialRound, 500);
                 return;
             }
 
@@ -2074,9 +2091,11 @@ function initSpinUI() {
                 drawWheel(remainingNames, currentRotation);
                 spinSpeed *= friction;
 
-                if (spinSpeed > 0.002) {
+                if (spinSpeed > 0.002 && !forceStop) {
                     requestAnimationFrame(animateSpin);
                 } else {
+                    forceStop = false; // Reset flag for the next round
+
                     let normalizedRotation = currentRotation % (2 * Math.PI);
                     if (normalizedRotation < 0) normalizedRotation += 2 * Math.PI;
 
@@ -2104,7 +2123,7 @@ function initSpinUI() {
                     const countEl = document.getElementById(`group-count-${activeGroup}`);
                     if (listEl) {
                         listEl.innerHTML += `<li>${winnerName}</li>`;
-                        listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        // listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                     if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
 
