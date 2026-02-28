@@ -801,6 +801,12 @@ function setupEventListeners() {
         closeMenu();
     });
 
+    document.getElementById('menu-undi')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.hash = 'undi';
+        closeMenu();
+    });
+
 
     document.getElementById('close-token-modal')?.addEventListener('click', () => {
         document.getElementById('token-modal').classList.remove('active');
