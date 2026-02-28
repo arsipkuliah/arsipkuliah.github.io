@@ -780,24 +780,26 @@ function checkHashRoute() {
     // Clear semua class active di sidebar menu
     document.querySelectorAll('.main-menu-links li a').forEach(a => a.classList.remove('active'));
 
+    // BERSERIKAN SEMUA MODAL SAAT PINDAH RUTE (Global Cleanup)
+    document.getElementById('upload-modal')?.classList.remove('active');
+    document.getElementById('cookie-settings-modal')?.classList.remove('active');
+    document.getElementById('preview-modal')?.classList.remove('active');
+
+    const matModal = document.getElementById('material-modal');
+    if (matModal) {
+        matModal.classList.remove('active', 'fullscreen-modal');
+        matModal.querySelector('.modal-content')?.classList.remove('fullscreen');
+        matModal.querySelector('.modal-header').style.display = 'flex'; // Reset header back to normal
+    }
+
+    // Kembalikan header utama ke default
+    const navBrand = document.querySelector('.navbar .logo');
+    if (navBrand) navBrand.innerHTML = '<span class="accent">F.</span>AGRIELLA';
+
     // 1. Rute Semester (atau kosongan dihitung Beranda)
     if (!hash || hash.startsWith('semester')) {
         const btn = document.getElementById('menu-beranda');
         if (btn) btn.classList.add('active');
-
-        // Kembalikan header utama
-        const navBrand = document.querySelector('.navbar .logo');
-        if (navBrand) navBrand.innerHTML = '<span class="accent">F.</span>AGRIELLA';
-
-        // Bersihkan area popup navigasi ketika kembali ke beranda
-        document.getElementById('upload-modal')?.classList.remove('active');
-        document.getElementById('cookie-settings-modal')?.classList.remove('active');
-
-        const matModal = document.getElementById('material-modal');
-        if (matModal) {
-            matModal.classList.remove('active', 'fullscreen-modal');
-            matModal.querySelector('.modal-content')?.classList.remove('fullscreen');
-        }
     }
     // 2. Rute Upload
     else if (hash === 'upload') {
