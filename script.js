@@ -83,7 +83,12 @@ function initCookieConsent() {
             if (!personalizationToggle.checked) {
                 localStorage.removeItem('theme');
                 localStorage.removeItem('bookmarks');
+                window.history.replaceState("", document.title, window.location.pathname + window.location.search);
                 window.location.reload();
+            } else {
+                if (window.location.hash === '#pengaturan') {
+                    window.history.pushState("", document.title, window.location.pathname + window.location.search);
+                }
             }
         };
 

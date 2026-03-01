@@ -179,6 +179,26 @@ body {
     border: 1px solid var(--border-color);
 }
 
+.dashboard-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-widget-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 63px;
+    height: 134px;
+    pointer-events: none;
+}
+
+.dashboard-card h3,
+.stats-grid {
+    position: relative;
+    z-index: 1;
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
